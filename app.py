@@ -11,7 +11,8 @@ def home():
 
 @app.route('/tamilmv.xml')
 def rss():
-    return send_file('rss.xml', mimetype='application/rss+xml')
+    # ✅ Use absolute path to avoid FileNotFoundError
+    return send_file(os.path.abspath('rss.xml'), mimetype='application/rss+xml')
 
 @app.route('/health')
 def health():
