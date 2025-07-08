@@ -1,21 +1,49 @@
-import time, json, requests
+import time, json, requests, os
 from bs4 import BeautifulSoup
 from feedgen.feed import FeedGenerator
 from urllib.parse import urljoin
 
-# ✅ Forum pages to scrape
+# ✅ All TamilBlasters forums
 FORUMS = [
-    "https://www.1tamilmv.onl/index.php?/forums/forum/11-web-hd-itunes-hd-bluray/",
-    "https://www.1tamilmv.onl/index.php?/forums/forum/10-predvd-dvdscr-cam-tc/",
-    "https://www.1tamilmv.onl/index.php?/forums/forum/12-hd-rips-dvd-rips-br-rips/"
+    "https://www.1tamilblasters.com/index.php?/forums/forum/8-tamil-new-movies-tcrip-dvdscr-hdcam-predvd.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/7-tamil-new-movies-hdrips-bdrips-dvdrips-hdtv.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/9-tamil-dubbed-movies-bdrips-hdrips-dvdscr-hdcam-in-multi-audios.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/56-tamil-old-mid-movies-bdrips-hdrips-dvdrips-hdtv.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/63-tamil-new-web-series-tv-shows.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/95-tamil-movies-dvd5-dvd9-untouched-dvds.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/75-malayalam-new-movies-tcrip-dvdscr-hdcam-predvd.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/74-malayalam-new-movies-hdrips-bdrips-dvdrips-hdtv.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/76-malayalam-dubbed-movies-bdrips-hdrips-dvdscr-hdcam.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/77-malayalam-old-mid-movies-bdrips-hdrips-dvdrips.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/98-malayalam-new-web-series-tv-shows.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/79-telugu-new-movies-tcrip-dvdscr-hdcam-predvd.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/78-telugu-new-movies-hdrips-bdrips-dvdrips-hdtv.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/80-telugu-dubbed-movies-bdrips-hdrips-dvdscr-hdcam.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/81-telugu-old-mid-movies-bdrips-hdrips-dvdrips.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/96-telugu-new-web-series-tv-shows.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/100-telugu-movies-dvd5-dvd9-untouched-dvds.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/86-hindi-new-movies-hdrips-bdrips-dvdrips-hdtv.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/87-hindi-new-movies-tcrip-dvdscr-hdcam-predvd.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/88-hindi-dubbed-movies-bdrips-hdrips-dvdscr-hdcam.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/102-hindi-old-mid-movies-bdrips-hdrips-dvdrips.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/89-hindi-new-web-series-tv-shows.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/101-hindi-movies-dvd5-dvd9-untouched-dvds.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/82-kannada-new-movies-hdrips-bdrips-dvdrips-hdtv.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/84-kannada-dubbed-movies-bdrips-hdrips-dvdscr-hdcam.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/83-kannada-new-movies-tcrip-dvdscr-hdcam-predvd.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/85-kannada-old-mid-movies-bdrips-hdrips-dvdrips.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/103-kannada-new-web-series-tv-shows.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/53-english-movies-hdrips-bdrips-dvdrips.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/52-english-movies-hdcam-dvdscr-predvd.xml",
+    "https://www.1tamilblasters.com/index.php?/forums/forum/92-english-web-series-tv-shows.xml"
 ]
 
-BASE_URL = "https://www.1tamilmv.onl"
+BASE_URL = "https://www.1tamilblasters.com"
 SEEN_FILE = "seen.json"
 RSS_FILE = "rss.xml"
-INTERVAL = 60  # 1 minutes
+INTERVAL = 60  # 1 minute
 
-# ✅ Load seen links to avoid duplicates
+# ✅ Load previously seen torrent links
 try:
     with open(SEEN_FILE) as f:
         seen = set(json.load(f))
@@ -24,26 +52,24 @@ except:
 
 def generate_rss():
     fg = FeedGenerator()
-    fg.title("1TamilMV Torrents")
-    fg.link(href=FORUMS[0], rel="alternate")
-    fg.description("Live torrent feed from TamilMV forums")
+    fg.title("TamilBlasters Torrents")
+    fg.link(href=BASE_URL, rel="alternate")
+    fg.description("Live RSS from TamilBlasters")
 
     updated = False
 
     for forum_url in FORUMS:
         try:
-            r = requests.get(forum_url, headers={"User-Agent": "Mozilla/5.0"})
-            soup = BeautifulSoup(r.text, "html.parser")
+            res = requests.get(forum_url, headers={"User-Agent": "Mozilla/5.0"})
+            soup = BeautifulSoup(res.text, "html.parser")
 
-            # ✅ Extract each topic link
-            for a in soup.select("div.ipsDataItem_main a[href]"):
-                topic_url = urljoin(BASE_URL, a["href"])
-                topic_title = a.get("title", "Unknown") + ".torrent"
+            for topic in soup.select("a[href*='index.php?/topic/']"):
+                topic_url = urljoin(BASE_URL, topic["href"])
+                topic_title = topic.get_text(strip=True) + ".torrent"
 
-                # Visit topic page to find .torrent link
                 try:
-                    topic_r = requests.get(topic_url, headers={"User-Agent": "Mozilla/5.0"})
-                    topic_soup = BeautifulSoup(topic_r.text, "html.parser")
+                    topic_res = requests.get(topic_url, headers={"User-Agent": "Mozilla/5.0"})
+                    topic_soup = BeautifulSoup(topic_res.text, "html.parser")
 
                     for link in topic_soup.select("a[href*='attachment.php']"):
                         torrent_url = urljoin(BASE_URL, link["href"])
@@ -54,27 +80,26 @@ def generate_rss():
                             fe.title(topic_title)
                             fe.link(href=torrent_url)
                             fe.pubDate(time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime()))
-                            updated = True
                             print("🎯 Added:", topic_title)
+                            updated = True
 
                 except Exception as err:
-                    print("❌ Error in topic page:", topic_url, err)
+                    print("❌ Error in topic:", topic_url, err)
 
         except Exception as e:
-            print("❌ Error fetching forum:", forum_url, e)
+            print("❌ Error loading forum:", forum_url, e)
 
-    # ✅ Write RSS file always
     fg.rss_file(RSS_FILE)
 
     if updated:
         with open(SEEN_FILE, "w") as f:
             json.dump(list(seen), f)
+        print("✅ RSS updated")
 
 def scrape_loop():
     while True:
         try:
             generate_rss()
-            print("✅ RSS updated")
         except Exception as e:
-            print("❌ Error:", e)
+            print("❌ Scraper crashed:", e)
         time.sleep(INTERVAL)
