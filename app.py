@@ -11,23 +11,22 @@ def home():
 
 @app.route('/tamilmv.xml')
 def rss():
-    # ✅ Use absolute path to avoid FileNotFoundError
     return send_file(os.path.abspath('rss.xml'), mimetype='application/rss+xml')
 
 @app.route('/health')
 def health():
     return "OK", 200
 
-# ✅ Ensure rss.xml file exists before serving
+# ✅ STEP: Ensure rss.xml exists
 if not os.path.exists("rss.xml"):
     with open("rss.xml", "w", encoding="utf-8") as f:
         f.write("""<rss version="2.0"><channel>
-<title>1TamilMV Torrents</title>
-<link>https://www.1tamilmv.onl</link>
+<title>TamilBlasters Torrents</title>
+<link>https://www.1tamilblasters.com</link>
 <description>Waiting for update...</description>
 </channel></rss>""")
 
-# Start scraping loop in background thread
+# ✅ Start scraper in background
 threading.Thread(target=scrape_loop, daemon=True).start()
 
 if __name__ == '__main__':
