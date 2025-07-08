@@ -1,7 +1,9 @@
 import time, json, requests, os
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
 from feedgen.feed import FeedGenerator
 from urllib.parse import urljoin
+import warnings
+warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 
 # ✅ All TamilBlasters forums
 FORUMS = [
