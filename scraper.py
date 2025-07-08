@@ -5,7 +5,6 @@ from urllib.parse import urljoin
 import warnings
 warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 
-# ✅ All TamilBlasters forums
 FORUMS = [
     "https://www.1tamilblasters.com/index.php?/forums/forum/8-tamil-new-movies-tcrip-dvdscr-hdcam-predvd.xml",
     "https://www.1tamilblasters.com/index.php?/forums/forum/7-tamil-new-movies-hdrips-bdrips-dvdrips-hdtv.xml",
@@ -43,7 +42,7 @@ FORUMS = [
 BASE_URL = "https://www.1tamilblasters.com"
 SEEN_FILE = "seen.json"
 RSS_FILE = "rss.xml"
-INTERVAL = 60  # 1 minute
+INTERVAL = 60  # seconds
 
 # ✅ Load previously seen torrent links
 try:
@@ -67,7 +66,6 @@ def generate_rss():
 
             for topic in soup.select("a[href*='index.php?/topic/']"):
                 topic_url = urljoin(BASE_URL, topic["href"])
-                topic_title = topic.get_text(strip=True) + ".torrent"
 
                 try:
                     topic_res = requests.get(topic_url, headers={"User-Agent": "Mozilla/5.0"})
@@ -75,14 +73,15 @@ def generate_rss():
 
                     for link in topic_soup.select("a[href*='attachment.php']"):
                         torrent_url = urljoin(BASE_URL, link["href"])
+                        torrent_name = link.get_text(strip=True)
 
-                        if torrent_url not in seen:
+                        if torrent_url not in seen and torrent_name.endswith(".torrent"):
                             seen.add(torrent_url)
                             fe = fg.add_entry()
-                            fe.title(topic_title)
+                            fe.title(torrent_name)
                             fe.link(href=torrent_url)
                             fe.pubDate(time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime()))
-                            print("🎯 Added:", topic_title)
+                            print("🎯 Added:", torrent_name)
                             updated = True
 
                 except Exception as err:
